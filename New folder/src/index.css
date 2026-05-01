@@ -1,0 +1,99 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Cairo", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  
+  --color-cyber-black: #020203;
+  --color-cyber-deep: #050506;
+  --color-cyber-line: rgba(139, 0, 0, 0.2);
+  --color-cyber-accent: #e61919; /* Blood Red */
+  --color-cyber-magenta: #8b0000;
+  --color-cyber-text: #d1d5db;
+  --color-cyber-muted: #6b7280;
+  --color-cyber-emerald: #fbbf24; /* Warning Gold */
+}
+
+@layer base {
+  body {
+    @apply bg-cyber-black text-cyber-text font-sans antialiased overflow-x-hidden relative;
+    background-image: 
+      radial-gradient(circle at 50% 50%, rgba(230, 25, 25, 0.03) 0%, transparent 60%),
+      linear-gradient(rgba(2, 2, 3, 0.98) 50%, rgba(2, 2, 3, 0.98) 50%),
+      url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 60 L60 60 L60 0' fill='none' stroke='rgba(230, 25, 25, 0.03)' stroke-width='1'/%3E%3C/svg%3E");
+    background-attachment: fixed;
+  }
+
+  body::after {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle, transparent 20%, rgba(0, 0, 0, 0.8) 150%);
+    pointer-events: none;
+    z-index: 50;
+  }
+}
+
+.glass-panel {
+  @apply bg-cyber-deep/80 backdrop-blur-xl border border-white/5;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+}
+
+.cyber-grid {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: -1;
+  background: 
+    linear-gradient(to bottom, transparent 0%, rgba(230, 25, 25, 0.05) 50%, transparent 100%);
+  background-size: 100% 2px;
+  animation: scan 8s linear infinite;
+  opacity: 0.5;
+}
+
+@keyframes scan {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+}
+
+.hologram-glow {
+  text-shadow: 0 0 10px rgba(230, 25, 25, 0.6), 0 0 20px rgba(230, 25, 25, 0.3);
+}
+
+.cyber-card {
+  @apply bg-cyber-deep/80 backdrop-blur-md border border-white/5 rounded-none transition-all duration-700 overflow-hidden relative;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
+}
+
+.cyber-card::after {
+  content: '';
+  @apply absolute top-0 left-0 w-full h-[1px] bg-cyber-accent opacity-0 transition-opacity duration-700;
+}
+
+.cyber-card:hover::after {
+  @apply opacity-100 shadow-[0_0_15px_#e61919];
+}
+
+.cyber-button {
+  @apply px-4 py-2 text-[10px] font-bold uppercase tracking-widest transition-all bg-transparent border border-cyber-accent/50 text-cyber-accent hover:bg-cyber-accent/10 hover:border-cyber-accent hover:shadow-[0_0_30px_rgba(230,25,25,0.3)];
+}
+
+.glitch-text {
+  position: relative;
+  animation: glitch 5s infinite;
+}
+
+@keyframes glitch {
+  0%, 90%, 100% { transform: translate(0); text-shadow: none; }
+  92% { transform: translate(-2px, 1px); text-shadow: 2px 0 #ff0000, -2px 0 #00ffff; }
+  94% { transform: translate(2px, -1px); text-shadow: -2px 0 #ff0000, 2px 0 #00ffff; }
+  96% { transform: translate(-1px, 2px); text-shadow: 1px 0 #ff0000, -1px 0 #00ffff; }
+}
+

@@ -1,0 +1,137 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Helpers ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+    function incoming() {
+      return request.resource.data;
+    }
+    function existing() {
+      return resource.data;
+    }
+    function isEmailVerified() {
+      return request.auth.token.email_verified == true;
+    }
+    function isAdmin() {
+      return isSignedIn() && (
+        exists(/databases/$(database)/documents/admins/$(request.auth.uid)) ||
+        request.auth.token.email == "ahmed25000681@gmail.com"
+      );
+    }
+
+    // --- Entity Validations ---
+    function isValidAdmin(data) {
+       return data.keys().hasAll(['email', 'role', 'updatedAt']) &&
+              data.email == request.auth.token.email &&
+              data.role in ['super', 'moderator'] &&
+              data.updatedAt == request.time;
+    }
+    
+    function isValidArticle(data) {
+      return data.keys().hasAll(['title', 'content', 'type', 'level', 'authorId', 'createdAt', 'updatedAt']) &&
+             data.title is string && data.title.size() <= 200 &&
+             data.content is string && data.content.size() <= 50000 &&
+             data.type in ['lesson', 'research', 'news', 'legal'] &&
+             data.level is number &&
+             data.authorId == request.auth.uid &&
+             data.updatedAt == request.time;
+    }
+
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'email', 'currentLevel', 'completedModules', 'signedCodeOfConduct', 'createdAt']) &&
+             data.keys().size() == 6 &&
+             data.uid == request.auth.uid &&
+             data.email is string &&
+             data.currentLevel is number &&
+             data.currentLevel >= 0 &&
+             data.completedModules is list &&
+             data.signedCodeOfConduct is bool &&
+             data.createdAt == request.time;
+    }
+
+    function isValidForumPost(data) {
+      return data.keys().hasAll(['title', 'content', 'authorId', 'authorName', 'createdAt']) &&
+             data.title is string && data.title.size() <= 200 &&
+             data.content is string && data.content.size() <= 5000 &&
+             data.authorId == request.auth.uid &&
+             data.createdAt == request.time;
+    }
+
+    // --- Collections ---
+
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidUser(incoming());
+      allow update: if isOwner(userId) && (
+        // Action: Sign Conduct
+        (incoming().diff(existing()).affectedKeys().hasOnly(['signedCodeOfConduct']) && incoming().signedCodeOfConduct == true) ||
+        // Action: Advance Level - Hardened check
+        (incoming().diff(existing()).affectedKeys().hasOnly(['currentLevel']) && 
+         incoming().currentLevel == existing().currentLevel + 1 &&
+         existing().completedModules.size() >= 2) ||
+        // Action: Complete Module
+        (incoming().diff(existing()).affectedKeys().hasOnly(['completedModules']) &&
+         incoming().completedModules.size() > existing().completedModules.size() &&
+         incoming().completedModules.hasAll(existing().completedModules))
+      );
+    }
+
+    match /articles/{articleId} {
+      allow get: if isSignedIn() && (
+        existing().level == 0 || 
+        isAdmin() ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.signedCodeOfConduct == true)
+      );
+      allow list: if isSignedIn() && (
+        resource.data.level == 0 ||
+        isAdmin() ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.signedCodeOfConduct == true)
+      );
+      allow write: if isAdmin() && isValidArticle(incoming()); 
+    }
+
+    match /tracks/{trackId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    match /forum_posts/{postId} {
+      allow list: if isSignedIn();
+      allow get: if isSignedIn();
+      allow create: if isSignedIn() && isEmailVerified() && isValidForumPost(incoming());
+      allow update: if (isOwner(existing().authorId) || isAdmin()) && 
+                      incoming().diff(existing()).affectedKeys().hasOnly(['title', 'content']) &&
+                      isValidForumPost(incoming());
+      allow delete: if isOwner(existing().authorId) || isAdmin();
+    }
+
+    match /admins/{userId} {
+      allow get: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+      allow write: if isAdmin() && isValidAdmin(incoming());
+    }
+
+    match /settings/global {
+      allow read: if true; // Public site settings
+      allow write: if isAdmin();
+    }
+
+    match /test/connection {
+      allow read: if true;
+    }
+  }
+}

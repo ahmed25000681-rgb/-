@@ -1,0 +1,117 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "User account information, level progress, and badges.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "displayName": { "type": "string" },
+        "email": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "currentLevel": { "type": "number" },
+        "completedModules": { "type": "array" },
+        "badges": { "type": "array" },
+        "signedCodeOfConduct": { "type": "boolean" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email", "currentLevel", "signedCodeOfConduct", "completedModules"]
+    },
+    "Track": {
+      "title": "Learning Track",
+      "description": "Educational track containing modules and lessons.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "level": { "type": "number" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "modules": { "type": "array" }
+      },
+      "required": ["level", "title"]
+    },
+    "Article": {
+      "title": "Article",
+      "description": "Technical article, research paper, or lesson content.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "content": { "type": "string" },
+        "type": { "enum": ["lesson", "research", "news", "legal"] },
+        "level": { "type": "number" },
+        "authorId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "content", "type"]
+    },
+    "Admin": {
+      "title": "Administrator",
+      "description": "System administrator record.",
+      "type": "object",
+      "properties": {
+        "email": { "type": "string" },
+        "role": { "enum": ["super", "moderator"] },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["email", "role"]
+    },
+    "ForumPost": {
+      "title": "Forum Post",
+      "description": "Discussion topic in the academic forum.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "content": { "type": "string" },
+        "authorId": { "type": "string" },
+        "authorName": { "type": "string" },
+        "tags": { "type": "array" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "content", "authorId"]
+    },
+    "SiteSettings": {
+      "title": "Site Settings",
+      "description": "Global configuration for site identity and branding.",
+      "type": "object",
+      "properties": {
+        "siteName": { "type": "string" },
+        "siteLogo": { "type": "string", "description": "URL of the site logo" },
+        "primaryColor": { "type": "string" },
+        "contactEmail": { "type": "string", "format": "email" },
+        "horrorIntensity": { "type": "number" },
+        "maintenanceMode": { "type": "boolean" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["siteName", "primaryColor"]
+    }
+  },
+  "firestore": {
+    "users/{userId}": {
+      "schema": "User",
+      "description": "Private user profiles."
+    },
+    "tracks/{trackId}": {
+      "schema": "Track",
+      "description": "Academic learning tracks."
+    },
+    "articles/{articleId}": {
+      "schema": "Article",
+      "description": "The Vault, Lessons, and Blogs."
+    },
+    "forum_posts/{postId}": {
+      "schema": "ForumPost",
+      "description": "Academic forum discussions."
+    },
+    "admins/{userId}": {
+      "schema": "Admin",
+      "description": "System administrators list."
+    },
+    "settings/global": {
+      "schema": "SiteSettings",
+      "description": "Global application configuration."
+    }
+  }
+}
